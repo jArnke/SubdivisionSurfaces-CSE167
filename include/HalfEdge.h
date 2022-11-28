@@ -38,6 +38,7 @@ public:
 	std::vector<Point*> pts;
 	std::vector<HalfEdge*> hes;
 	std::vector<Face*> faces;
+	bool use_face_norm;
 
 	void init(const char* filePath);
 	void init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices);

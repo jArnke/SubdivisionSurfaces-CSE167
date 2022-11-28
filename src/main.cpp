@@ -16,6 +16,8 @@ static const int width = 800;
 static const int height = 600;
 static const char* title = "Model viewer";
 static const glm::vec4 background(0.1f, 0.2f, 0.3f, 1.0f);
+
+std::vector<HalfEdgeMesh> surfaces;
 static HalfEdgeMesh cube;
 static HalfEdgeMesh teapot;
 static HalfEdgeMesh bunny;
@@ -36,13 +38,13 @@ struct NormalShader : Shader {
     }
 };
 static NormalShader shader;
-static bool enable_perspective = false;
+static bool enable_perspective = true;
 // A simple projection matrix for orthographic view.
 static glm::mat4 proj_default = glm::mat4(0.75f,0.0f,0.0f,0.0f,
                                           0.0f,1.0f,0.0f,0.0f,
                                           0.0f,0.0f,-0.1f,0.0f,
                                           0.0f,0.0f,0.0f,1.0f);
-static int model_selection = 1;
+static int model_selection = 0;
 
 #include "hw2AutoScreenshots.h"
 
@@ -56,7 +58,8 @@ void printHelp(){
       press 'r' to reset camera.
       press 'p' to toggle orthographic/perspective.
       press '1','2','3' to select cube, teapot, bunny.
-    
+      press '/' to subdivide the current model
+
       press Spacebar to generate images for hw2 submission.
     
 )";
@@ -70,11 +73,20 @@ void initialize(void){
     
     // Initialize geometries
     cube.init("models/20_icosahedron.obj");
-    teapot.init("models/teapot.obj");
-    bunny.init("models/bunny.obj");
-    
+    cube.buildVAO();
+
+    teapot.init("models/8_octahedron.obj");
+    teapot.buildVAO();
+
+    bunny.init("models/sphere.obj");
+    bunny.buildVAO();
+
+    surfaces.push_back(cube);
+    surfaces.push_back(teapot);
+    surfaces.push_back(bunny);
+
     // Initialize camera (set default values)
-    camera.eye_default = glm::vec3(0.0f, -1.0f, 5.0f);
+    camera.eye_default = glm::vec3(0.0f, 0.2f, 2.5f);
     camera.target_default = glm::vec3(0.0f, 0.2f, 0.0f);
     camera.up_default = glm::vec3(0.0f, 1.0f, 0.0f);
     camera.fovy_default = 90.0f;
@@ -103,20 +115,8 @@ void display(void){
     shader.projection = enable_perspective? camera.proj : proj_default;
     shader.setUniforms();
     // BEGIN draw
-    switch(model_selection){
-        case 1:
-            cube.buildVAO();
-            cube.draw();
-            break;
-        case 2:
-            teapot.buildVAO();
-            teapot.draw();
-            break;
-        case 3: 
-            bunny.buildVAO();
-            bunny.draw();
-            break;
-    }
+    surfaces[model_selection].draw();
+
     // END draw
     
     glutSwapBuffers();
@@ -154,32 +154,26 @@ void keyboard(unsigned char key, int x, int y){
             glutPostRedisplay();
             break;
         case '1':
-            model_selection = 1;
+            model_selection = 0;
             glutPostRedisplay();
             break;
         case '2':
-            model_selection = 2;
+            model_selection = 1;
             glutPostRedisplay();
             break;
         case '3':
-            model_selection = 3;
-            glutPostRedisplay();
-            break;
-        case ' ':
-            hw2AutoScreenshots();
+            model_selection = 2;
             glutPostRedisplay();
             break;
         case '/':
-            switch (model_selection) {
-                case 1:
-                    cube.subdivide();
-                    break;
-                case 2:
-                    teapot.subdivide();
-                    break;
-                case 3:
-                    bunny.subdivide();
-                    break;
+            surfaces[model_selection].subdivide();
+            surfaces[model_selection].buildVAO();
+            glutPostRedisplay();
+            break;
+        case '.':
+            for (int i = 0; i < surfaces.size(); i++) {
+                surfaces[i].use_face_norm = !surfaces[i].use_face_norm;
+                surfaces[i].buildVAO();
             }
             break;
         default:

@@ -98,7 +98,7 @@ bool vecComp(const glm::vec3 lhs, const glm::vec3 rhs)
 }
 
 void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices) {
-
+	this->use_face_norm = true;
 	//Create all points:
 	int numVertices = vertices.size();
 	for (int i = 0; i < numVertices; i++) {
@@ -596,25 +596,29 @@ void HalfEdgeMesh::buildVAO() {
 		}
 		vertices[i] = he->src->pos;
 
-		//get neighbors:
+		//Calculate Normal:
+		if (use_face_norm)
+			normals[i] = face->norm;
+		else {
+			//get neighbors:
+			Point* curPt = he->src;
+			HalfEdge* he0 = he;
+			std::vector<Face*> neighbors;
+			do {
+				neighbors.push_back(he->face);
+				if (he->flip == nullptr)
+					break;
+				he = he->flip->next;
+			} while (he != he0);
 
-		Point* curPt = he->src;
-		HalfEdge* he0 = he;
-		std::vector<Face*> neighbors;
-		do {
-			neighbors.push_back(he->face);
-			if (he->flip == nullptr)
-				break;
-			he = he->flip->next;
-		} while (he != he0);
-
-		unsigned int numNeighbors = neighbors.size();
-		glm::vec3 sum = glm::vec3(0, 0, 0);
-		for (unsigned int i = 0; i < numNeighbors; i++) {
-			sum += neighbors[i]->norm;
+			unsigned int numNeighbors = neighbors.size();
+			glm::vec3 sum = glm::vec3(0, 0, 0);
+			for (unsigned int i = 0; i < numNeighbors; i++) {
+				sum += neighbors[i]->norm;
+			}
+			glm::vec3 norm = glm::normalize(sum);
+			normals[i] = norm;
 		}
-		glm::vec3 norm = glm::normalize(face->norm);
-		normals[i] = norm;
 	}
 
 	// setting up buffers
