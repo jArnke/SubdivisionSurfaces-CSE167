@@ -174,6 +174,7 @@ void keyboard(unsigned char key, int x, int y){
             for (int i = 0; i < surfaces.size(); i++) {
                 surfaces[i].use_face_norm = !surfaces[i].use_face_norm;
                 surfaces[i].buildVAO();
+                glutPostRedisplay();
             }
             break;
         default:

@@ -16,19 +16,27 @@
 #include "HalfEdge.h"
 
 
+/*
+* Loads an obj file, converts its data into a half edge mesh.  Works only on triangle or quad meshes.
+* @todo convert general polygolan faces to multiple trianges
+* 
+*/
 void HalfEdgeMesh::init(const char* filename) {
-	std::vector< glm::vec3 > temp_vertices, vertices;
-	std::vector< glm::vec3 > temp_normals, normals;
-	std::vector< unsigned int > temp_vertexIndices, indices;
-	std::vector< unsigned int > temp_normalIndices;
+	std::vector< glm::vec3 > vertices;
+	std::vector< unsigned int > indices;
 
-	// load obj file
+	//whether or not the mesh contains normals
+	bool contains_normals = false;
+
+	// Open obj file
 	FILE* file = fopen(filename, "r");
-	if (file == NULL) {
+	if (file == NULL) { //Failed to open file
 		std::cerr << "Cannot open file: " << filename << std::endl;
 		exit(-1);
 	}
+
 	std::cout << "Loading " << filename << "...";
+	//traverse file line by line until reach eof.
 	while (!feof(file)) {
 		char lineHeader[128];
 		// read the first word of the line
@@ -40,66 +48,51 @@ void HalfEdgeMesh::init(const char* filename) {
 		if (strcmp(lineHeader, "v") == 0) {
 			glm::vec3 vertex;
 			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			temp_vertices.push_back(vertex);
+			vertices.push_back(vertex);
 		}
+
 		else if (strcmp(lineHeader, "vn") == 0) {
 			glm::vec3 normal;
 			fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			temp_normals.push_back(normal);
+			contains_normals = true;
 		}
+
 		else if (strcmp(lineHeader, "f") == 0) {
 			//std::string vertex1, vertex2, vertex3;
-			if (temp_normals.size() == 0) {
+			if (!contains_normals) {
 				unsigned int vertexIndex[3];
 				fscanf(file, "%d %d %d\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
-				temp_vertexIndices.push_back(vertexIndex[0]);
-				temp_vertexIndices.push_back(vertexIndex[1]);
-				temp_vertexIndices.push_back(vertexIndex[2]);
+				indices.push_back(vertexIndex[0]);
+				indices.push_back(vertexIndex[1]);
+				indices.push_back(vertexIndex[2]);
 
 			}
 			else {
 				unsigned int vertexIndex[3], normalIndex[3];
 				fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
-				temp_vertexIndices.push_back(vertexIndex[0]);
-				temp_vertexIndices.push_back(vertexIndex[1]);
-				temp_vertexIndices.push_back(vertexIndex[2]);
-				temp_normalIndices.push_back(normalIndex[0]);
-				temp_normalIndices.push_back(normalIndex[1]);
-				temp_normalIndices.push_back(normalIndex[2]);
+				indices.push_back(vertexIndex[0]);
+				indices.push_back(vertexIndex[1]);
+				indices.push_back(vertexIndex[2]);
 			}
 		}
 	}
-	this->init(temp_vertices, temp_vertexIndices);
-	std::cout << "done." << std::endl;
 
-
-	/*
-	// post processing
-	std::cout << "Processing data...";
-	unsigned int n = temp_vertexIndices.size(); // #(triangles)*3
-	vertices.resize(n);
-	normals.resize(n);
-	indices.resize(n);
-	for (unsigned int i = 0; i < n; i++) {
-		indices[i] = i;
-		vertices[i] = temp_vertices[temp_vertexIndices[i] - 1];
-		normals[i] = temp_normals[temp_normalIndices[i] - 1];
-	}
-
+	//build mesh from vertices and indices:
 	this->init(vertices, indices);
 	std::cout << "done." << std::endl;
-	*/
 
 }
-bool vecComp(const glm::vec3 lhs, const glm::vec3 rhs)
-{
-	return lhs.x < rhs.x ||
-		lhs.x == rhs.x && (lhs.y < rhs.y || lhs.y == rhs.y && lhs.z < rhs.z);
-}
 
+/*
+Builds HalfEdge datastructure from faces described by vertices and indices arrays
+*/
 void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices) {
+	
+	//sets flag to render using face normals as opposed to interpolating between vertices by default
+	//@todo move this to be an argument to buildVAO() function.
 	this->use_face_norm = true;
-	//Create all points:
+
+	//Create "Points" from vertice array.
 	int numVertices = vertices.size();
 	for (int i = 0; i < numVertices; i++) {
 		Point* point = (Point*)malloc(sizeof(Point));
@@ -110,40 +103,25 @@ void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> ind
 	}
 
 	//Fill out Faces and HE's
-	int len = indices.size();
-	int numVerts = vertices.size();
-
-
+	int numIndices = indices.size();
+	
+	//Map assaings a pair of indices a half edge.  The half edge point from vertex a to vertex b can be found at Edges[pair(a, b)]
+	//Given edge from a, b. If that edge's flip has already been inserted, it can be found at Edges[pair(b, a)];
 	std::map< std::pair<int, int>, HalfEdge*> Edges;
 
-	for (int it = 0; it < len; it += 3) {
+	for (int it = 0; it < numIndices; it += 3) { //traverse 3 indices at a time, inserting a new face for the 3 given vertices
+
 		//get indices:
 		int i = indices[it];
 		int j = indices[it + 1];
 		int k = indices[it + 2];
+		
+		//the indices array in a .obj file starts at 1 rather than 0.  Thuse we need to subtract 1 to get the actual index into the vertice array.
 		i--;
 		j--;
 		k--;
-		/*
-		auto ijFlip = Edges.find(std::pair<int, int>(i, j));
-		auto jkFlip = Edges.find(std::pair<int, int>(j, k));
-		auto kiFlip = Edges.find(std::pair<int, int>(k, i));
-		if (ijFlip != Edges.end()) {
-			int temp = i;
-			i = j;
-			j = temp;
-		}
-		else if (jkFlip != Edges.end()) {
-			int temp = k;
-			k = j;
-			j = temp;
-		}
-		else if (kiFlip != Edges.end()) {
-			int temp = k;
-			k = i;
-			i = temp;
-		}*/
 
+		/* Create new halfEdges for the current face */  //@Todo move this to a function?
 		HalfEdge* ij = (HalfEdge*)malloc(sizeof(HalfEdge));
 		HalfEdge* jk = (HalfEdge*)malloc(sizeof(HalfEdge));
 		HalfEdge* ki = (HalfEdge*)malloc(sizeof(HalfEdge));
@@ -156,7 +134,7 @@ void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> ind
 		jk->src = this->pts[j];
 		ki->src = this->pts[k];
 
-		//check if points have he
+		//update points to reference the new HalfEdge starting at that point
 		ij->src->he = ij;
 		jk->src->he = jk;
 		ki->src->he = ki;
@@ -175,7 +153,6 @@ void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> ind
 		else {
 			ij->flip = nullptr;
 		}
-
 
 		auto kj = Edges.find(std::pair<int, int>(k, j));
 		if (kj != Edges.end()) {
@@ -197,17 +174,19 @@ void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> ind
 
 		//Generate face:
 		Face* face = (Face*)malloc(sizeof(Face));
-		face->he = ij;
+		face->he = ij; 
 
+		//Calculate Normal Vector for a given face 
 		glm::vec3 pos1 = face->he->src->pos;
 		glm::vec3 pos2 = face->he->next->src->pos;
 		glm::vec3 pos3 = face->he->next->next->src->pos;
 		glm::vec3 v1 = pos2 - pos1;
 		glm::vec3 v2 = pos3 - pos1;
 		glm::vec3 norm = glm::normalize(glm::cross(v1, v2));
-
+		
 		face->norm = norm;
 
+		//Attach reference to face to each of its HalfEdges:
 		ij->face = face;
 		jk->face = face;
 		ki->face = face;
@@ -224,46 +203,41 @@ void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> ind
 		Edges[std::pair<int, int>(j, k)] = jk;
 		Edges[std::pair<int, int>(k, i)] = ki;
 	}
+	//Clean up mesh structure and label boundary points.
 	this->labelBoundaries();
 	this->deleteDanglingPts();
 }
 
+/* Removes Disconnected points from Mesh */
+//@TODO fix memory leak:
 void HalfEdgeMesh::deleteDanglingPts() {
 	int len = this->pts.size();
 	std::vector<Point*> newPoints;
+
 	for (int i = 0; i < len; i++) {
 		if (this->pts[i]->he == nullptr) {
+			//TODO Free memory allocated for disconnected point
 			continue;
 		}
 		newPoints.push_back(this->pts[i]);
 	}
+
 	this->pts = newPoints;
-
-
 }
+
+/* Traverses Edges Looking for Boundaries of Mesh s*/
 void HalfEdgeMesh::labelBoundaries() {
-	std::cout << "labeling boundary points\n";
-	int countPos = 0;
-	int countNeg = 0;
+
 	for (auto edge : this->hes) {
 		if (edge->flip == nullptr) {
 			edge->isBoundary = true;
-			if (!edge->src->isBoundary) {
-				edge->src->isBoundary = true;
-				countPos++;
-				std::cout << "\tBoundary Point at: " << edge->src->pos.x << ", " << edge->src->pos.y << "\n";
-			}
+			edge->src->isBoundary = true;
 		}
-		else {
-			edge->isBoundary = false;
-		}
+		//no need to do anything in opposite case as isBoundary is set to false by default
 	}
+	
 
-	std::cout << "Num Boundary: " << countPos << "\n";
-
-
-	//Print out data structure
-
+	//Print out data structure: Changed to true for debugging @TODO move to its own function...
 	if (false) { // change to false when done testing
 		std::cout << "\n\n[Printing resulting data structure]";
 		for (int i = 0; i < faces.size(); i++) {
@@ -295,18 +269,29 @@ void HalfEdgeMesh::labelBoundaries() {
 		}
 	}
 }
+
+
 void HalfEdgeMesh::subdivide() {
-	std::cout << "Preparring to process, " << this->pts.size() << ", points...\n";
+	//vector of all new points to be added throughout algoritmn 
+	//replaces old this->pts at the end
 	std::vector<Point*> newPoints;
-	std::map<Point*, Point*> updatedPointPos;
-	//update old point positions:
+
+	//maps old references to old Point* to their new Point* with their updated position
+	//used when splitting faces.
+	std::map<Point*, Point*> OldToNewPoints;
+
+	//traverses points and calculates their new position based on neighbors
 	for (auto pointIter : this->pts) {
 
+		//current point
 		Point* pt = pointIter;
+
 		if (pt->isBoundary) { // at crease position at pt = a(1/8) ---------- pt (3/4) -------------- b(1/8)
-			std::cout << "processing boundary point\n";
 			Point* a;
 			Point* b;
+			//i don't remember how this works but if you draw it out I think it makes sense
+			//at the end point a and point b will refer to the cw and ccw most neighbors of the current point
+			//@Todo create a helper function which rotates cw or ccw from a given point to make this more readable.
 			if (pt->he->flip == nullptr) {
 				a = pt->he->next->src;
 				if (pt->he->next->next->flip == nullptr) {
@@ -321,14 +306,19 @@ void HalfEdgeMesh::subdivide() {
 				b = pt->he->flip->next->next->src;
 			}
 
+			//create a new point
 			Point* newPt = (Point*)malloc(sizeof(Point));
+
+			//calculate position of new point as a weighted average of the current point and its ccw / cw most neighbors
 			newPt->pos = (a->pos * .125f) + (b->pos * .125f) + (pt->pos * .75f);
 			newPt->isBoundary = false;
 			newPoints.push_back(newPt);
-			updatedPointPos[pt] = newPt;
+			//map pointer from original point to new point
+			OldToNewPoints[pt] = newPt;
 		}
-		else {  //Otherwise calculate B given k neighbors:
-			//traverse all neighbor points:
+		else {  //If point is not a boundary location...
+
+			//obtain a list of all neighbor points:
 			std::vector<Point*> neighbors;
 			HalfEdge* he0 = pt->he->next->next;
 			HalfEdge* he = he0;
@@ -336,32 +326,36 @@ void HalfEdgeMesh::subdivide() {
 				neighbors.push_back(he->src);
 				he = he->flip->next->next;
 			} while (he != he0);
+
+			//calculate beta given k neighbors...
 			int k = neighbors.size();
 			float beta = this->calcBeta(k);
 
+			//calculate new position based on weighted average of neighbors
 			glm::vec3 sum = glm::vec3(0, 0, 0);
 			for (auto neighbor : neighbors) {
 				sum += (neighbor->pos * beta);
 			}
-
 			sum += ((1 - (k * beta)) * pt->pos);
 
+			//create new point based on new position:
 			Point* newPt = (Point*)malloc(sizeof(Point));
 			newPt->pos = sum;
 			newPt->isBoundary = false;
 			newPoints.push_back(newPt);
-			updatedPointPos[pt] = newPt;
-
+			OldToNewPoints[pt] = newPt; //map pointer to old point to new point
 		}
 	}
+	//Done calculating updated positions for original vertices:
+	
+	//Now traverse each face, creating new points at the midway point of each edge, and then splitting the face into 4 subfaces:
+	std::map<std::pair<Point*, Point*>, std::pair<HalfEdge*, Point*>> visitedEdges; //Maps two points to the Edge connecting the two points as well as the newly created midPoint of that edge
+																					//Prevents creating a new midPoint at both the Halfs of a given edge
+	std::vector<HalfEdge*> newEdges; //new list of edges to replace this->hes
+	std::vector<Face*> newFaces;     //new list of faces to replace this->faces
+	std::map<std::pair<Point*, Point*>, HalfEdge*> edges;	//Map of edges used like in init() to find flip edges
 
-	std::map<std::pair<Point*, Point*>, std::pair<HalfEdge*, Point*>> visitedEdges;
-	std::vector<HalfEdge*> newEdges;
-	std::vector<Face*> newFaces;
-	std::map<std::pair<Point*, Point*>, HalfEdge*> edges;
-
-	std::cout << "Number of processed pts: " << updatedPointPos.size() << "\n";
-	//Connect new mesh -- gen new faces
+	//gen new faces
 	for (auto face : this->faces) {
 		//get edges of current face:
 		HalfEdge* hes[3];
@@ -371,13 +365,13 @@ void HalfEdgeMesh::subdivide() {
 
 
 		Point* pts[3];
-		//Generate new points from face:
+		//First generate new points from face at edge midpoints:
 		for (int i = 0; i < 3; i++) {
-			HalfEdge* he = hes[i];
+			HalfEdge* he = hes[i];		//"he" is HalfEdge from Point* a to Point* b
 			Point* a = he->src;
 			Point* b = he->next->src;
 			if (he->isBoundary) {
-				//calculate new point position
+				//calculate new point position as average of points a and b
 				Point* pt = (Point*)malloc(sizeof(Point));
 				pt->pos = (a->pos + b->pos) * .5f;
 				pt->isBoundary = false;
@@ -400,6 +394,7 @@ void HalfEdgeMesh::subdivide() {
 				}
 				//calculate new point position
 				Point* pt = (Point*)malloc(sizeof(Point));
+				//neighbor points, a, b, c, d refer to locations in diagram from slides.  the edge goes from point a to b.  Two faces share those points, c and d refer to the outside points of each of those faces.
 				Point* c = he->next->next->src;
 				Point* d = he->flip->next->next->src;
 				pt->pos = ((a->pos + b->pos) * .375f) + ((c->pos + d->pos) * .125f);
@@ -414,9 +409,8 @@ void HalfEdgeMesh::subdivide() {
 			}
 		}
 
-		//generate new faces from new points:
-
-		//gen middle face
+		//generate new face from new points:
+		//gen middle face:  Connects each of the newly generated midPoints into a new face.
 		HalfEdge* ij = (HalfEdge*)malloc(sizeof(HalfEdge));
 		HalfEdge* jk = (HalfEdge*)malloc(sizeof(HalfEdge));
 		HalfEdge* ki = (HalfEdge*)malloc(sizeof(HalfEdge));
@@ -429,7 +423,6 @@ void HalfEdgeMesh::subdivide() {
 		jk->src = pts[1];
 		ki->src = pts[2];
 
-
 		ij->src->he = ij;
 		jk->src->he = jk;
 		ki->src->he = ki;
@@ -438,6 +431,7 @@ void HalfEdgeMesh::subdivide() {
 		jk->isBoundary = false;
 		ki->isBoundary = false;
 
+		//Each edge has no flip yet as the other inside faces haven't been added yet.
 		ij->flip = nullptr;
 		jk->flip = nullptr;
 		ki->flip = nullptr;
@@ -469,12 +463,13 @@ void HalfEdgeMesh::subdivide() {
 		edges[std::pair<Point*, Point*>(pts[1], pts[2])] = jk;
 		edges[std::pair<Point*, Point*>(pts[2], pts[0])] = ki;
 
-		//gen outer faces
+		//gen outer faces:
 		for (int it = 0; it < 3; it++) {
-
-			Point* i = updatedPointPos[(hes[it]->src)];
-			Point* j = pts[it];
-			Point* k = pts[(it + 2) % 3];
+			
+			//each face contains one original vertex of the face and two of the newly generated midPoint vertices
+			Point* i = OldToNewPoints[(hes[it]->src)];  //original point
+			Point* j = pts[it];	//newly created point
+			Point* k = pts[(it + 2) % 3];//opposite newly created point
 
 			HalfEdge* ij = (HalfEdge*)malloc(sizeof(HalfEdge));
 			HalfEdge* jk = (HalfEdge*)malloc(sizeof(HalfEdge));
@@ -522,6 +517,7 @@ void HalfEdgeMesh::subdivide() {
 			else
 				ki->flip = nullptr;
 
+			//allocate face
 			Face* face = (Face*)malloc(sizeof(Face));
 			face->he = ij;
 
@@ -549,24 +545,32 @@ void HalfEdgeMesh::subdivide() {
 			edges[std::pair<Point*, Point*>(j, k)] = jk;
 			edges[std::pair<Point*, Point*>(k, i)] = ki;
 
-		}
+		}//Done adding outside faces
 	}
+	//done subdividing faces
 
-
+	//at this point, newPoints should have all the newly created points and updated old points
+	//newEdges should contain all the new edges
+	//and newFaces should contain all the new faces
+	
+	//therefore we can safely free the memory for the old values
 	this->clearData();
 
+	//and override their vectors
 	this->pts = newPoints;
 	this->hes = newEdges;
 	this->faces = newFaces;
 
+	//finally we clean up by labeling the boundary points in the new mesh
 	this->labelBoundaries();
-
+	
+	//and build the VAO to render the subdivided mesh //@todo subivide could take a parameter (int n) to subidivide n times before buiding the VAO, should loop here
 	this->buildVAO();
-
-
 
 }
 
+/* Calculates Beta given k neighbors */
+//Formula comes from slides...
 float HalfEdgeMesh::calcBeta(int k) {
 	float beta;
 	if (k > 3) {
@@ -578,6 +582,8 @@ float HalfEdgeMesh::calcBeta(int k) {
 	return beta;
 }
 
+/* Builds the Vertex Array Object for the mesh so that it can be rendered by the GPU */
+/* If we choose to display more information: such as highlighting boundary edges edit shader and make sure to fill in uniforms here */
 void HalfEdgeMesh::buildVAO() {
 	std::vector<glm::vec3> vertices;
 	std::vector<unsigned int> indices;
@@ -587,7 +593,7 @@ void HalfEdgeMesh::buildVAO() {
 	vertices.resize(n);
 	indices.resize(n);
 	normals.resize(n);
-	for (unsigned int i = 0; i < n; i++) {
+	for (unsigned int i = 0; i < n; i++) { //@todo This code could probably be a bit cleaner if you traverse through each face rather than looping 3 times over a given face.  This is inefficient and hard to read...
 		indices[i] = i;
 		Face* face = faces[i / 3];
 		HalfEdge* he = face->he;
@@ -622,7 +628,6 @@ void HalfEdgeMesh::buildVAO() {
 	}
 
 	// setting up buffers
-	std::cout << "Setting up buffers...";
 	glGenVertexArrays(1, &vao);
 	buffers.resize(3);
 	glGenBuffers(3, buffers.data());
@@ -640,16 +645,17 @@ void HalfEdgeMesh::buildVAO() {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+
 	// indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[2]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, n * sizeof(indices[0]), &indices[0], GL_STATIC_DRAW);
 
 	count = n;
 	glBindVertexArray(0);
-	std::cout << "done." << std::endl;
 
 }
 
+/* @TODO free memory for points halfEdges and faces in vectors */
 void HalfEdgeMesh::clearData() {
 	return;
 }
