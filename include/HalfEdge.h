@@ -32,6 +32,7 @@ struct Point {
 struct Face {
 	HalfEdge* he;		//Pointer to an arbritary HalfEdge that is part of the face.  
 	glm::vec3 norm;		//Normal vector pointing outwards from this face.
+	bool newFace;
 };
 
 class HalfEdgeMesh : public Geometry {
@@ -41,10 +42,6 @@ public:
 	std::vector<HalfEdge*> hes;
 	std::vector<Face*> faces;
 
-	//Whether or not the BuildVAO command should use the face normals or calculate the normal at each vertex.
-	//When true, makes faces solid colored and distinguishable, when false gives a smooth interpolated 
-	//Will probably change to being an argument to the buildVAO function later
-	bool use_face_norm;
 
 	//Loads the data from a .obj file and converts it into 2 arrays of vertices and indices.
 	//Then calls init using those arrays
@@ -57,7 +54,7 @@ public:
 	void subdivide();
 
 	//Converts the values in the pts,hes, and faces, into a format passable to the GPU for rendering
-	void buildVAO();
+	void buildVAO(bool, bool);
 
 private:
 	//Calculates the 

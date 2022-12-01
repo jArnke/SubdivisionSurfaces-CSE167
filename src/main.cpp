@@ -21,6 +21,7 @@ std::vector<HalfEdgeMesh> surfaces;
 static HalfEdgeMesh cube;
 static HalfEdgeMesh teapot;
 static HalfEdgeMesh bunny;
+static HalfEdgeMesh quad;
 static Camera camera;
 struct NormalShader : Shader {
     
@@ -38,6 +39,8 @@ struct NormalShader : Shader {
     }
 };
 static NormalShader shader;
+static bool outline = false;
+static bool use_face_norm = true;
 static bool enable_perspective = true;
 // A simple projection matrix for orthographic view.
 static glm::mat4 proj_default = glm::mat4(0.75f,0.0f,0.0f,0.0f,
@@ -59,6 +62,8 @@ void printHelp(){
       press 'p' to toggle orthographic/perspective.
       press '1','2','3' to select cube, teapot, bunny.
       press '/' to subdivide the current model
+      press '.' to toggle face normals and vertext normals
+      press ',' to toggle outlines
 
       press Spacebar to generate images for hw2 submission.
     
@@ -73,17 +78,30 @@ void initialize(void){
     
     // Initialize geometries
     cube.init("models/20_icosahedron.obj");
-    cube.buildVAO();
+    cube.buildVAO(use_face_norm, outline);
 
     teapot.init("models/8_octahedron.obj");
-    teapot.buildVAO();
+    teapot.buildVAO(use_face_norm, outline);
 
     bunny.init("models/sphere.obj");
-    bunny.buildVAO();
+    bunny.buildVAO(use_face_norm, outline);
+
+    std::vector<glm::vec3> vertices;
+    std::vector<GLuint> indices = {
+        1, 2, 4,
+        4, 2, 3
+    };
+    vertices.push_back(glm::vec3(-1.0f, -1.0f, 0.0f));
+    vertices.push_back(glm::vec3(-1.0f, 1.0f, 0.0f));
+    vertices.push_back(glm::vec3(1.0f, 1.0f, 0.0f));
+    vertices.push_back(glm::vec3(1.0f, -1.0f, 0.0f));
+    quad.init(vertices, indices);
+    quad.buildVAO(use_face_norm, outline);
 
     surfaces.push_back(cube);
     surfaces.push_back(teapot);
     surfaces.push_back(bunny);
+    surfaces.push_back(quad);
 
     // Initialize camera (set default values)
     camera.eye_default = glm::vec3(0.0f, 0.2f, 2.5f);
@@ -154,29 +172,34 @@ void keyboard(unsigned char key, int x, int y){
             glutPostRedisplay();
             break;
         case '1':
-            model_selection = 0;
-            glutPostRedisplay();
-            break;
-        case '2':
-            model_selection = 1;
-            glutPostRedisplay();
-            break;
-        case '3':
-            model_selection = 2;
+            model_selection = (model_selection + 1)%surfaces.size();
             glutPostRedisplay();
             break;
         case '/':
             surfaces[model_selection].subdivide();
-            surfaces[model_selection].buildVAO();
+            surfaces[model_selection].buildVAO(use_face_norm, outline);
             glutPostRedisplay();
             break;
         case '.':
-            for (int i = 0; i < surfaces.size(); i++) {
-                surfaces[i].use_face_norm = !surfaces[i].use_face_norm;
-                surfaces[i].buildVAO();
-                glutPostRedisplay();
-            }
+            use_face_norm = !use_face_norm;
+            for (int i = 0; i < surfaces.size(); i++)
+                surfaces[i].buildVAO(use_face_norm, outline);
+            glutPostRedisplay();
             break;
+        case ',': 
+            outline = !outline;
+            if (outline) {
+                glLineWidth(10);
+                glEnable(GL_CULL_FACE);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            }
+            else {
+                glDisable(GL_CULL_FACE);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+            for(int i = 0; i<surfaces.size(); i++)
+                surfaces[i].buildVAO(use_face_norm, outline);
+            glutPostRedisplay();
         default:
             glutPostRedisplay();
             break;

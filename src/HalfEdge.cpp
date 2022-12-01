@@ -88,10 +88,6 @@ Builds HalfEdge datastructure from faces described by vertices and indices array
 */
 void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices) {
 	
-	//sets flag to render using face normals as opposed to interpolating between vertices by default
-	//@todo move this to be an argument to buildVAO() function.
-	this->use_face_norm = true;
-
 	//Create "Points" from vertice array.
 	int numVertices = vertices.size();
 	for (int i = 0; i < numVertices; i++) {
@@ -185,6 +181,7 @@ void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> ind
 		glm::vec3 norm = glm::normalize(glm::cross(v1, v2));
 		
 		face->norm = norm;
+		face->newFace = false;
 
 		//Attach reference to face to each of its HalfEdges:
 		ij->face = face;
@@ -450,6 +447,7 @@ void HalfEdgeMesh::subdivide() {
 		glm::vec3 v2 = pos3 - pos1;
 		glm::vec3 norm = glm::normalize(glm::cross(v1, v2));
 		face->norm = norm;
+		face->newFace = true;
 
 		//add all edges and face to vectors:
 		newEdges.push_back(ij);
@@ -532,6 +530,7 @@ void HalfEdgeMesh::subdivide() {
 			glm::vec3 v2 = pos3 - pos1;
 			glm::vec3 norm = glm::normalize(glm::cross(v1, v2));
 			face->norm = norm;
+			face->newFace = false;
 
 			//add all edges and face to vectors:
 			newEdges.push_back(ij);
@@ -563,9 +562,6 @@ void HalfEdgeMesh::subdivide() {
 
 	//finally we clean up by labeling the boundary points in the new mesh
 	this->labelBoundaries();
-	
-	//and build the VAO to render the subdivided mesh //@todo subivide could take a parameter (int n) to subidivide n times before buiding the VAO, should loop here
-	this->buildVAO();
 
 }
 
@@ -584,7 +580,7 @@ float HalfEdgeMesh::calcBeta(int k) {
 
 /* Builds the Vertex Array Object for the mesh so that it can be rendered by the GPU */
 /* If we choose to display more information: such as highlighting boundary edges edit shader and make sure to fill in uniforms here */
-void HalfEdgeMesh::buildVAO() {
+void HalfEdgeMesh::buildVAO(bool use_face_norm, bool outline) {
 	std::vector<glm::vec3> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<glm::vec3> normals;
@@ -603,7 +599,15 @@ void HalfEdgeMesh::buildVAO() {
 		vertices[i] = he->src->pos;
 
 		//Calculate Normal:
-		if (use_face_norm)
+		if (outline) {
+			if (face->newFace) {
+				normals[i] = glm::vec3(0.0f, 0.0f, 1.0f);
+			}
+			else {
+				normals[i] = glm::vec3(1.0f, 0.0f, 0.0f);
+			}
+		}
+		else if (use_face_norm)
 			normals[i] = face->norm;
 		else {
 			//get neighbors:
@@ -651,6 +655,7 @@ void HalfEdgeMesh::buildVAO() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, n * sizeof(indices[0]), &indices[0], GL_STATIC_DRAW);
 
 	count = n;
+
 	glBindVertexArray(0);
 
 }
