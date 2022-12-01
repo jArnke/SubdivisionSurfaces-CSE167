@@ -59,12 +59,15 @@ public:
 	//Converts the values in the pts,hes, and faces, into a format passable to the GPU for rendering
 	void buildVAO();
 
+	//traverse the list of edges to find boundary edges, labeling them and their source point as boundary edges/points
+	void labelBoundaries();
+
+	//Looks for points disconnected from the mesh, and removes them.
+	void deleteDanglingPts();
 private:
 	//Calculates the 
 	float calcBeta(int k);
 
-	//traverse the list of edges to find boundary edges, labeling them and their source point as boundary edges/points
-	void labelBoundaries();
 
 	//@TODO not yet implemented
 	//frees the memory allocated for the meshes current points, halfedges, and faces. 
@@ -72,8 +75,24 @@ private:
 	//Also called in the subdivide command before replacing the old lists with the updated values from subdividing.
 	void clearData();
 
-	//Looks for points disconnected from the mesh, and removes them.
-	void deleteDanglingPts();
 };
+
+
+class HalfEdgeQuadMesh : public HalfEdgeMesh {
+public:
+	//Loads the data from a .obj file and converts it into 2 arrays of vertices and indices.
+	//Then calls init using those arrays
+	void init(const char* filePath);
+	//Builds the HalfEdgeMesh data structure using input values.
+	//Creates necessary Points, HalfEdges, and Faces to represent mesh and populates member vectors of this class
+	void init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices);
+
+	//Uses Loop Subdivision Algorithm to subdivide the surface once, then replaces the current values in the vectors of this class
+	void subdivide();
+
+	//Converts the values in the pts,hes, and faces, into a format passable to the GPU for rendering
+	void buildVAO();
+};
+
 
 #endif

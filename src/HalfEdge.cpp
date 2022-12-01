@@ -659,3 +659,4 @@ void HalfEdgeMesh::buildVAO() {
 void HalfEdgeMesh::clearData() {
 	return;
 }
+
