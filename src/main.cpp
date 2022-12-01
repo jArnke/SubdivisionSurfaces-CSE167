@@ -18,10 +18,15 @@ static const char* title = "Model viewer";
 static const glm::vec4 background(0.1f, 0.2f, 0.3f, 1.0f);
 
 std::vector<HalfEdgeMesh> surfaces;
-static HalfEdgeMesh cube;
-static HalfEdgeMesh teapot;
-static HalfEdgeMesh bunny;
+std::vector<HalfEdgeQuadMesh> quadSurfaces;
+
+static HalfEdgeMesh icosohedron;
+static HalfEdgeMesh octohedron;
+static HalfEdgeMesh sphere;
 static HalfEdgeMesh quad;
+
+static HalfEdgeQuadMesh quadCube;
+
 static Camera camera;
 struct NormalShader : Shader {
     
@@ -48,6 +53,7 @@ static glm::mat4 proj_default = glm::mat4(0.75f,0.0f,0.0f,0.0f,
                                           0.0f,0.0f,-0.1f,0.0f,
                                           0.0f,0.0f,0.0f,1.0f);
 static int model_selection = 0;
+static bool use_catMull = false;
 
 #include "hw2AutoScreenshots.h"
 
@@ -77,14 +83,14 @@ void initialize(void){
     glViewport(0,0,width,height);
     
     // Initialize geometries
-    cube.init("models/20_icosahedron.obj");
-    cube.buildVAO(use_face_norm, outline);
+    icosohedron.init("models/20_icosahedron.obj");
+    icosohedron.buildVAO(use_face_norm, outline);
 
-    teapot.init("models/8_octahedron.obj");
-    teapot.buildVAO(use_face_norm, outline);
+    octohedron.init("models/8_octahedron.obj");
+    octohedron.buildVAO(use_face_norm, outline);
 
-    bunny.init("models/sphere.obj");
-    bunny.buildVAO(use_face_norm, outline);
+    sphere.init("models/sphere.obj");
+    sphere.buildVAO(use_face_norm, outline);
 
     std::vector<glm::vec3> vertices;
     std::vector<GLuint> indices = {
@@ -98,10 +104,18 @@ void initialize(void){
     quad.init(vertices, indices);
     quad.buildVAO(use_face_norm, outline);
 
-    surfaces.push_back(cube);
-    surfaces.push_back(teapot);
-    surfaces.push_back(bunny);
+    surfaces.push_back(icosohedron);
+    surfaces.push_back(octohedron);
+    surfaces.push_back(sphere);
     surfaces.push_back(quad);
+
+    quadCube.init("models/cube_quads.obj");
+    quadCube.buildVAO(use_face_norm, outline);
+
+    quadSurfaces.push_back(quadCube);
+    quadSurfaces.push_back(quadCube);
+    quadSurfaces.push_back(quadCube);
+    quadSurfaces.push_back(quadCube);
 
     // Initialize camera (set default values)
     camera.eye_default = glm::vec3(0.0f, 0.2f, 2.5f);
@@ -133,7 +147,11 @@ void display(void){
     shader.projection = enable_perspective? camera.proj : proj_default;
     shader.setUniforms();
     // BEGIN draw
-    surfaces[model_selection].draw();
+    if (use_catMull)
+        quadSurfaces[model_selection].draw();
+    else
+        surfaces[model_selection].draw();
+
 
     // END draw
     
@@ -176,14 +194,22 @@ void keyboard(unsigned char key, int x, int y){
             glutPostRedisplay();
             break;
         case '/':
-            surfaces[model_selection].subdivide();
-            surfaces[model_selection].buildVAO(use_face_norm, outline);
+            if (use_catMull) {
+                quadSurfaces[model_selection].subdivide();
+                quadSurfaces[model_selection].buildVAO(use_face_norm, outline);
+            }
+            else {
+                surfaces[model_selection].subdivide();
+                surfaces[model_selection].buildVAO(use_face_norm, outline);
+            }
             glutPostRedisplay();
             break;
         case '.':
             use_face_norm = !use_face_norm;
-            for (int i = 0; i < surfaces.size(); i++)
+            for (int i = 0; i < surfaces.size(); i++) {
                 surfaces[i].buildVAO(use_face_norm, outline);
+                quadSurfaces[i].buildVAO(use_face_norm, outline);
+            }
             glutPostRedisplay();
             break;
         case ',': 
@@ -197,9 +223,16 @@ void keyboard(unsigned char key, int x, int y){
                 glDisable(GL_CULL_FACE);
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            for(int i = 0; i<surfaces.size(); i++)
+            for (int i = 0; i < surfaces.size(); i++) {
                 surfaces[i].buildVAO(use_face_norm, outline);
+                quadSurfaces[i].buildVAO(use_face_norm, outline);
+            }
             glutPostRedisplay();
+            break;
+        case 'c':
+            use_catMull = !use_catMull;
+            glutPostRedisplay();
+            break;
         default:
             glutPostRedisplay();
             break;

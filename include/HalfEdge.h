@@ -88,7 +88,7 @@ public:
 	void subdivide();
 
 	//Converts the values in the pts,hes, and faces, into a format passable to the GPU for rendering
-	void buildVAO();
+	void buildVAO(bool, bool);
 };
 
 
