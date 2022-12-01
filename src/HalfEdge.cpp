@@ -990,7 +990,13 @@ void HalfEdgeQuadMesh::subdivide() {
 	std::map<HalfEdge*, Point*> edgeToEdgePoint;
 	for (auto he : hes) {
 		if (he->isBoundary) {
-			std::cout << "Whoops, we didnt handle boundary points...";
+
+			glm::vec3 midPoint = (he->src->pos + he->next->src->pos) * .5f;
+
+			Point* newPt = (Point*)malloc(sizeof(Point));
+			newPt->pos = (midPoint + midPoint) * .5f;
+			edgePoints.push_back(newPt);
+			edgeToEdgePoint[he] = newPt;
 		}
 		else {
 			//check if flip edge was already handled
@@ -1013,26 +1019,59 @@ void HalfEdgeQuadMesh::subdivide() {
 	//update original point positions
 	std::vector<glm::vec3> updatedPositions;
 	for (auto point : pts) {
-		glm::vec3 F = glm::vec3(0.0f, 0.0f, 0.0f);
-		glm::vec3 R = glm::vec3(0.0f, 0.0f, 0.0f);
-		int n = 0;
-		//get neighbors:
-		HalfEdge* he = point->he;
-		HalfEdge* he0 = he;
-		do {
-			F = F + faceToFacePoint[he->face]->pos;
-			R = R + ((he->src->pos + he->next->src->pos) * .5f);
-			n++;
-			if (he->flip == nullptr)
-				break;
-			he = he->flip->next;
-		} while (he != he0);
-		F = F * (1.0f / n);
-		R = R * (1.0f / n);
+		if (point->isBoundary) {
+			glm::vec3 R = glm::vec3(0.0f, 0.0f, 0.0f);
+			int n = 0;
+			//get neighbors:
 
-		glm::vec3 pos = F + (2.0f * R) + ((n - 3.0f) * point->pos);
-		pos = pos * (1.0f/n);
-		updatedPositions.push_back(pos);
+			//rotate ccw
+			HalfEdge* he = point->he;
+			HalfEdge* he0 = he;
+			do {
+				R = R + ((he->src->pos + he->next->src->pos) * .5f);
+				n++;
+				if (he->flip == nullptr)
+					break;
+				he = he->flip->next;
+			} while (he != he0);
+
+			//roate cw
+			he = point->he->next->next->next;
+			he0 = he;
+			do {
+				R = R + ((he->src->pos + he->next->src->pos) * .5f);
+				n++;
+				if (he->flip == nullptr)
+					break;
+				he = he->flip->next->next->next;
+			} while (he != he0);
+
+			n++;
+			glm::vec3 pos = (R + point->pos) * (1.0f / n);
+			updatedPositions.push_back(pos);
+		}
+		else {
+			glm::vec3 F = glm::vec3(0.0f, 0.0f, 0.0f);
+			glm::vec3 R = glm::vec3(0.0f, 0.0f, 0.0f);
+			int n = 0;
+			//get neighbors:
+			HalfEdge* he = point->he;
+			HalfEdge* he0 = he;
+			do {
+				F = F + faceToFacePoint[he->face]->pos;
+				R = R + ((he->src->pos + he->next->src->pos) * .5f);
+				n++;
+				if (he->flip == nullptr)
+					break;
+				he = he->flip->next;
+			} while (he != he0);
+			F = F * (1.0f / n);
+			R = R * (1.0f / n);
+
+			glm::vec3 pos = F + (2.0f * R) + ((n - 3.0f) * point->pos);
+			pos = pos * (1.0f / n);
+			updatedPositions.push_back(pos);
+		}
 	}
 
 	//update original position of original points
@@ -1165,6 +1204,8 @@ void HalfEdgeQuadMesh::subdivide() {
 		this->pts.push_back(pt);
 	for (auto pt : edgePoints)
 		this->pts.push_back(pt);
+
+	this->labelBoundaries();
 
 
 }

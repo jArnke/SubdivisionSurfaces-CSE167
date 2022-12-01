@@ -26,6 +26,7 @@ static HalfEdgeMesh sphere;
 static HalfEdgeMesh quad;
 
 static HalfEdgeQuadMesh quadCube;
+static HalfEdgeQuadMesh quadQuad;
 
 static Camera camera;
 struct NormalShader : Shader {
@@ -112,8 +113,13 @@ void initialize(void){
     quadCube.init("models/cube_quads.obj");
     quadCube.buildVAO(use_face_norm, outline);
 
+    std::vector<GLuint> quadInds = {
+        1,2,3,4
+    };
+    quadQuad.init(vertices, quadInds);
+
     quadSurfaces.push_back(quadCube);
-    quadSurfaces.push_back(quadCube);
+    quadSurfaces.push_back(quadQuad);
     quadSurfaces.push_back(quadCube);
     quadSurfaces.push_back(quadCube);
 
