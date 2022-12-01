@@ -664,3 +664,4 @@ void HalfEdgeMesh::buildVAO(bool use_face_norm, bool outline) {
 void HalfEdgeMesh::clearData() {
 	return;
 }
+
