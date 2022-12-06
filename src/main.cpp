@@ -29,19 +29,29 @@ static HalfEdgeQuadMesh quadCube;
 static HalfEdgeQuadMesh quadQuad;
 
 static Camera camera;
+
 struct NormalShader : Shader {
     
     // modelview and projection
     glm::mat4 modelview = glm::mat4(1.0f); GLuint modelview_loc;
     glm::mat4 projection = glm::mat4(1.0f); GLuint projection_loc;
+
+    int nLights = 1;
+    std::vector<glm::vec4> lpos = { glm::vec4(5.0f, 10.0f, 0.0f, 1.0f) };   GLuint lightpositions_loc;
+    std::vector<glm::vec4> lcol = { glm::vec4(1.0f, 1.0f, 1.0f, 1.0f) };   GLuint lightcolors_loc;
+
     
     void initUniforms(){
         modelview_loc = glGetUniformLocation( program, "modelview" );
         projection_loc = glGetUniformLocation( program, "projection" );
+        lightcolors_loc = glGetUniformLocation(program, "lightcolors");
+        lightpositions_loc = glGetUniformLocation(program, "lightpositions");
     }
     void setUniforms(){
         glUniformMatrix4fv(modelview_loc, 1, GL_FALSE, &modelview[0][0]);
         glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0][0]);
+        glUniform4fv(lightpositions_loc, GLsizei(nLights), &lpos[0][0]);
+        glUniform4fv(lightcolors_loc, GLsizei(nLights), &lcol[0][0]);
     }
 };
 static NormalShader shader;
@@ -67,7 +77,9 @@ void printHelp(){
       press the arrow keys to rotate camera.
       press 'r' to reset camera.
       press 'p' to toggle orthographic/perspective.
-      press '1','2','3' to select cube, teapot, bunny.
+      press 'l' to toggle lighting
+      press '1' to cycle between models
+      press 'c' to view quad surfaces
       press '/' to subdivide the current model
       press '.' to toggle face normals and vertext normals
       press ',' to toggle outlines
@@ -151,6 +163,10 @@ void display(void){
     camera.computeMatrices();
     shader.modelview = camera.view;
     shader.projection = enable_perspective? camera.proj : proj_default;
+    shader.nLights = 1;
+    
+
+
     shader.setUniforms();
     // BEGIN draw
     if (use_catMull)

@@ -42,6 +42,8 @@ public:
 	std::vector<HalfEdge*> hes;
 	std::vector<Face*> faces;
 
+	bool isQuads;
+
 
 	//Loads the data from a .obj file and converts it into 2 arrays of vertices and indices.
 	//Then calls init using those arrays
@@ -51,7 +53,9 @@ public:
 	void init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices);
 
 	//Uses Loop Subdivision Algorithm to subdivide the surface once, then replaces the current values in the vectors of this class
+	void loop_subdivide();
 	void subdivide();
+	void catmull_subdivide();
 
 	//Converts the values in the pts,hes, and faces, into a format passable to the GPU for rendering
 	void buildVAO(bool, bool);
@@ -71,6 +75,9 @@ private:
 	//Should be called by the deconstructor of this class
 	//Also called in the subdivide command before replacing the old lists with the updated values from subdividing.
 	void clearData();
+
+	void buildTriVAO(bool, bool);
+	void buildQuadVAO(bool, bool);
 
 };
 
