@@ -14,7 +14,7 @@ const vec4 emision = vec4(.1f, .1f, .1f, 1.0f);
 const float shininess = 100.0f;
 
 const int maximal_allowed_lights = 10;
-const bool enable_lighting = false;
+uniform bool enable_lighting;
 const int nlights = 1;
 uniform vec4 lightpositions[nlights]; 
 uniform vec4 lightcolors[nlights];

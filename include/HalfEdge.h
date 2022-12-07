@@ -47,14 +47,16 @@ public:
 
 	//Loads the data from a .obj file and converts it into 2 arrays of vertices and indices.
 	//Then calls init using those arrays
-	void init(const char* filePath);
+	void init(const char* filePath, bool);
+	void initFromQuads(const char* filePath);
+	void init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices, bool isQuads);
 	//Builds the HalfEdgeMesh data structure using input values.
 	//Creates necessary Points, HalfEdges, and Faces to represent mesh and populates member vectors of this class
 	void init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices);
 
 	//Uses Loop Subdivision Algorithm to subdivide the surface once, then replaces the current values in the vectors of this class
 	void loop_subdivide();
-	void subdivide();
+	void subdivide(bool);
 	void catmull_subdivide();
 
 	//Converts the values in the pts,hes, and faces, into a format passable to the GPU for rendering
@@ -65,6 +67,8 @@ public:
 
 	//Looks for points disconnected from the mesh, and removes them.
 	void deleteDanglingPts();
+
+	void convertToTris();
 private:
 	//Calculates the 
 	float calcBeta(int k);
@@ -79,23 +83,9 @@ private:
 	void buildTriVAO(bool, bool);
 	void buildQuadVAO(bool, bool);
 
-};
+	void buildStructFromTriMesh(std::vector<glm::vec3> vertices, std::vector<GLuint> indices);
+	void buildStructFromQuadMesh(std::vector<glm::vec3> vertices, std::vector<GLuint> indices);
 
-
-class HalfEdgeQuadMesh : public HalfEdgeMesh {
-public:
-	//Loads the data from a .obj file and converts it into 2 arrays of vertices and indices.
-	//Then calls init using those arrays
-	void init(const char* filePath);
-	//Builds the HalfEdgeMesh data structure using input values.
-	//Creates necessary Points, HalfEdges, and Faces to represent mesh and populates member vectors of this class
-	void init(std::vector<glm::vec3> vertices, std::vector<GLuint> indices);
-
-	//Uses Loop Subdivision Algorithm to subdivide the surface once, then replaces the current values in the vectors of this class
-	void subdivide();
-
-	//Converts the values in the pts,hes, and faces, into a format passable to the GPU for rendering
-	void buildVAO(bool, bool);
 };
 
 
