@@ -163,8 +163,6 @@ If LoopSubdivide is called with a quad mesh, the mesh will first have its quads 
 
 ![Unchanged octahedron](images/octahedron0.png)  ![Catmull-Clark octahedron1](images/octahedron1_catmull.png) ![Catmull-Clark octahedron2](images/octahedron2_catmull.png)
 
-
-
 ### Donut Catmull-Clark
 
 |![1](images/Donut1.png)|![2](images/Donut2.png)|![3](images/Donut3.png)|![4](images/DonutSmooth.png)|
