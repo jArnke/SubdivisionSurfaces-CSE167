@@ -107,6 +107,7 @@ void HalfEdgeMesh::init(std::vector<glm::vec3> vertices, std::vector<GLuint> ind
 Builds HalfEdge datastructure from faces described by vertices and indices arrays
 */
 void HalfEdgeMesh::buildStructFromTriMesh(std::vector<glm::vec3> vertices, std::vector<GLuint> indices) {
+	this->clearData();
 	this->isQuads = false;
 	//Create "Points" from vertice array.
 	int numVertices = vertices.size();
@@ -229,7 +230,7 @@ void HalfEdgeMesh::buildStructFromTriMesh(std::vector<glm::vec3> vertices, std::
 Builds HalfEdge datastructure from faces described by vertices and indices arrays
 */
 void HalfEdgeMesh::buildStructFromQuadMesh(std::vector<glm::vec3> vertices, std::vector<GLuint> indices) {
-
+	this->clearData();
 	this->mode = GL_QUADS;
 	//Create "Points" from vertice array.
 	int numVertices = vertices.size();
@@ -1207,6 +1208,29 @@ void HalfEdgeMesh::buildQuadVAO(bool use_face_norm, bool outline) {
 
 /* @TODO free memory for points halfEdges and faces in vectors */
 void HalfEdgeMesh::clearData() {
+	/* todo... properlly clean up
+	int numPoints = this->pts.size();
+	int numEdges = this->hes.size();
+	int numFaces = this->faces.size();
+	for (int i = 0; i < numPoints; i++) {
+		Point* p = pts[i];
+		free(p);
+		std::cout << "freed Point ";
+	}
+	std::cout << "\n done freeing points";
+	for (int i = 0; i < numEdges; i++) {
+		HalfEdge* he = hes[i];
+		free(he);
+	}
+	for (int i = 0; i < numFaces; i++) {
+		Face* face = faces[i];
+		free(face);
+	}
+	*/
+	this->hes.clear();
+	this->pts.clear();
+	this->faces.clear();
+	
 	return;
 }
 

@@ -21,7 +21,8 @@ std::vector<HalfEdgeMesh> surfaces;
 
 static HalfEdgeMesh icosohedron;
 static HalfEdgeMesh octohedron;
-static HalfEdgeMesh sphere;
+static HalfEdgeMesh cube;
+static HalfEdgeMesh donut;
 static HalfEdgeMesh quad;
 
 static Camera camera;
@@ -76,8 +77,9 @@ void printHelp(){
       press the arrow keys to rotate camera.
       press 'r' to reset camera.
       press 'p' to toggle orthographic/perspective.
+      press 'q' to reset all surfaces
       press 'l' to toggle lighting.
-      press '1' to cycle between models
+      press 'n' to select the next model 
       press 'c' to toggle between using loop and catmull subdivision
       press 't' to convert current surface to a triangle mesh
       press '/' to subdivide the current model
@@ -102,8 +104,12 @@ void initialize(void){
     octohedron.init("models/8_octahedron.obj", false);
     octohedron.buildVAO(use_face_norm, outline);
 
-    sphere.init("models/sphere.obj", false);
-    sphere.buildVAO(use_face_norm, outline);
+    donut.init("models/quad_donut.obj", true);
+    donut.buildVAO(use_face_norm, outline);
+
+    cube.init("models/cube_quads.obj", true);
+    cube.buildVAO(use_face_norm, outline);
+
 
     std::vector<glm::vec3> vertices;
     std::vector<GLuint> indices = {
@@ -117,9 +123,11 @@ void initialize(void){
     quad.init(vertices, indices, false);
     quad.buildVAO(use_face_norm, outline);
 
+    surfaces.clear();
     surfaces.push_back(icosohedron);
     surfaces.push_back(octohedron);
-    surfaces.push_back(sphere);
+    surfaces.push_back(cube);
+    surfaces.push_back(donut);
     surfaces.push_back(quad);
 
 
@@ -188,6 +196,10 @@ void keyboard(unsigned char key, int x, int y){
         case 'o': // save screenshot
             saveScreenShot();
             break;
+        case 'q':
+            initialize();
+            glutPostRedisplay();
+            break;
         case 'r':
             camera.reset();
             glutPostRedisplay();
@@ -205,7 +217,7 @@ void keyboard(unsigned char key, int x, int y){
                 std::cout << "Lighting disabled\n";
             glutPostRedisplay();
             break;
-        case '1':
+        case 'n':
             model_selection = (model_selection + 1)%surfaces.size();
             glutPostRedisplay();
             break;
