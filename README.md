@@ -7,7 +7,7 @@ Subdividing a surface is the process of dividing a surfaces faces into several s
 
 # Download Build
 
-[Windowsx64](Release/Windows-x64.zip)
+[Windowsx64](https://github.com/jArnke/SubdivisionSurfaces/releases/tag/Releases)
 
 # Mathematics
 
