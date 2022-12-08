@@ -139,41 +139,29 @@ If LoopSubdivide is called with a quad mesh, the mesh will first have its quads 
 
 ## Examples
 
-### Subdiving a Icosahedron:
-
-![unchanged icosahedron](images/icosahedron0.png)
+### Subdiving an Icosahedron:
 
 
-#### Loop Division
+#### Using Loop Subdivision:
 
-![Loop subdivision icosahedron1](images/icosahedron1_loop.png)
+![unchanged icosahedron](images/icosahedron0.png)  ![Loop subdivision icosahedron1](images/icosahedron1_loop.png)  ![Loop subdivision icosahedron2](images/icosahedron2_loop.png)
 
-![Loop subdivision icosahedron2](images/icosahedron2_loop.png)
+#### Using Catmull-Clark:
 
-#### Catmull-Clark
-
-![Catmull-Clark icosahedron1](images/icosahedron1_catmull.png)
-
-![Catmull-Clark icosahedron2](images/icosahedron2_catmull.png)
+![unchanged icosahedron](images/icosahedron0.png)  ![Catmull-Clark icosahedron1](images/icosahedron1_catmull.png)  ![Catmull-Clark icosahedron2](images/icosahedron2_catmull.png)
 
 
 
-### Subdiving a Octahedron:
-
-![Unchanged octahedron](images/octahedron0.png)
+### Subdiving an Octahedron:
 
 
-#### Loop Division
+#### Using Loop Subdivision
 
-![Loop subdivision octahedron1](images/octahedron1_loop.png)
+![Unchanged octahedron](images/octahedron0.png)  ![Loop subdivision octahedron1](images/octahedron1_loop.png)  ![Loop subdivision octahedron2](images/octahedron2_loop.png)
 
-![Loop subdivision octahedron2](images/octahedron2_loop.png)
+#### Using Catmull-Clark
 
-#### Catmull-Clark
-
-![Catmull-Clark octahedron1](images/octahedron1_catmull.png)
-
-![Catmull-Clark octahedron2](images/octahedron2_catmull.png)
+![Unchanged octahedron](images/octahedron0.png)  ![Catmull-Clark octahedron1](images/octahedron1_catmull.png) ![Catmull-Clark octahedron2](images/octahedron2_catmull.png)
 
 
 
