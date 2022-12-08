@@ -176,6 +176,6 @@ If LoopSubdivide is called with a quad mesh, the mesh will first have its quads 
 
 - Similar to above... alternating between using Catmull-Clark, and converting back to triangles and using Loop gives an similary interesting result, however rather than rivers we see resembles mountains and valleys
 
-![ExampleGif](images/CatmullLoopAlternate.gif)  ![ExampleImage](images/CatmullLoopAlternate.jpg)
+![ExampleGif](images/CatmullLoopAlternate.gif)  ![ExampleImage](images/catmullLoopAlternate.jpg)
 
 These artifacts arise from the converstion from quads to triangles and aren't necessarilly smooth but they interesting detail to the subdivided surfaces
