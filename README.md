@@ -1,5 +1,5 @@
 
->Project By: Jacob Yenney and Karisma Kumar
+Project By: Jacob Yenney and Karisma Kumar
 
 ![demonstration gif](images/demo.gif)
 
