@@ -69,6 +69,70 @@ Given the input Geometry G.
 
 ### HalfEdge Data Structure
 
+In order to implement these subdivision algorithms, we implmented the helpful HalfEdge representation of a geometry.  This data structure splits a mesh into lists of the following structs: HalfEdges, Points, and Faces.  These
+structs contain the following information
+
+```c++
+struct HalfEdge {
+	HalfEdge* next;		//Pointer to next HalfEdge in triangle
+	HalfEdge* flip;		//Pointer to HalfEdge on opposite side of edge.
+	Point* src;			//Pointer to point this HalfEdge originates from. 
+	Face* face;			//Pointer to triangle face this HalfEdge belongs to.
+};
+
+struct Point {
+	HalfEdge* he;		//Pointer to an arbritrary HalfEdge originating from this point.
+	glm::vec3 pos;		//Where this point is located in space, realtive to the models coordinates.
+};
+
+
+
+struct Face {
+	HalfEdge* he;		//Pointer to an arbritary HalfEdge that is part of the face.  
+};
+```
+
+We added some addition data to the structs which made certain parts of the subdivision algorithm and drawing the model easier.
+
+``` c++
+struct HalfEdge {
+    ...
+    bool isBoundary; // True if the halfedge is located on the edge of the mesh
+}
+struct Point {
+    ...
+    bool isBoundary; // True if the point is located on the edge of the mesh
+}
+struct Face {
+    ...
+    glm::vec3 norm; // Normal vector of the face
+    bool newFace;   // True if the face was generated in the last iteration of Loop-Subdivision
+}
+```
+
+In the program we first import a given .obj file to create a new HalfEdgeMesh object which contains the following vectors.  Currently only triangle or quad meshes are supported.
+
+``` c++
+std::vector<HalfEdge*> hes;
+std::vector<Point*> pts;
+std::vector<Face*> faces;
+```
+
+Next we define a function to convert the mesh into a form that can be sent to the GPU for rendering
+
+``` c++
+HalfEdgeMesh::BuildVAO();
+```
+
+Finally we define functions for subdivision
+
+``` c++
+HalfEdgeMesh::LoopSubdivde();
+HalfEdgeMesh::CatmullSubdivide();
+```
+These function will update the he, faces, and pts, vectors of the object with its subdivided form.  In order to render the subdivided form, BuildVAO() must be called again.  
+
+If LoopSubdivide is called with a quad mesh, the mesh will first have its quads split into two trianlgles and then the subdivision will take place.
 
 
 ## Examples
