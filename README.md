@@ -67,6 +67,8 @@ Given the input Geometry G.
 
 ## Implemenation Details
 
+We started with HW2 as a starting point for our code, adding two new files: HalfEdge.h and HalfEdge.cpp in which we implemented the HalfEdge data structure.  We also updated the shader code to support a basic form of lighting, and the main.cpp file to interface with the new data structure.
+
 ### HalfEdge Data Structure
 
 In order to implement these subdivision algorithms, we implmented the helpful HalfEdge representation of a geometry.  This data structure splits a mesh into lists of the following structs: HalfEdges, Points, and Faces.  These
@@ -84,8 +86,6 @@ struct Point {
 	HalfEdge* he;		//Pointer to an arbritrary HalfEdge originating from this point.
 	glm::vec3 pos;		//Where this point is located in space, realtive to the models coordinates.
 };
-
-
 
 struct Face {
 	HalfEdge* he;		//Pointer to an arbritary HalfEdge that is part of the face.  
@@ -134,6 +134,22 @@ These function will update the he, faces, and pts, vectors of the object with it
 
 If LoopSubdivide is called with a quad mesh, the mesh will first have its quads split into two trianlgles and then the subdivision will take place.
 
-
 ## Examples
 
+
+
+
+
+## Interesting Properties:
+
+
+- Using Catmull-Clark Subdivision, converting the mesh back into triangles between each iteration of subdivision gives generates the same smooth surface as it would otherwise, however it is very jagged locally, creating a very interesting mesh.  The result looks like erosion from rivers
+
+
+|![ExampleGif](images/catmullWithTriangles.gif)|![ExampleImage](images/catmullWithTriangles.jpg)|
+|----------------------------------------------|------------------------------------------------|
+
+- Similar to above... alternating between using Catmull-Clark, and converting back to triangles and using Loop gives an similary interesting result, however rather than rivers we see what resembles craters and 
+
+|![ExampleGif](images/CatmullLoopAlternate.gif)|![ExampleImage](images/CatmullLoopAlternate.jpg)|
+|----------------------------------------------|------------------------------------------------|
