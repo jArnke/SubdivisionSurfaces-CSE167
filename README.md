@@ -138,25 +138,37 @@ If LoopSubdivide is called with a quad mesh, the mesh will first have its quads 
 ## Examples
 
 Icosahedron
+
 ![unchanged icosahedron](images/icosahedron0.png)
 
+
 Iteration 1 and 2 using Loop Subdivision
+
 ![Loop subdivision icosahedron1](images/icosahedron1_loop.png)
+
 ![Loop subdivision icosahedron2](images/icosahedron2_loop.png)
 
 Iteration 1 and 2 using Catmull-Clark Subdivision
+
 ![Catmull-Clark icosahedron1](images/icosahedron1_catmull.png)
+
 ![Catmull-Clark icosahedron2](images/icosahedron2_catmull.png)
+
+
 
 Octahedron 
 ![Unchanged octahedron](images/octahedron0.png)
 
+
 Iteration 1 and 2 using Loop Subdivision
+
 ![Loop subdivision octahedron1](images/octahedron1_loop.png)
+
 ![Loop subdivision octahedron2](images/octahedron2_loop.png)
 
 Iteration 1 and 2 using CatMull-Clark Subdivision
-![Catmull-Clark octahedron1](images/octahedron1_catmull.png)
-![Catmull-Clark octahedron2](images/octahedron2_catmull.png)
 
+![Catmull-Clark octahedron1](images/octahedron1_catmull.png)
+
+![Catmull-Clark octahedron2](images/octahedron2_catmull.png)
 
