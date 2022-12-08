@@ -6,6 +6,9 @@ Project By: Jacob Yenney and Karisma Kumar
 
 Subdividing a surface is the process of dividing a surfaces faces into several subfaces.  Different techniques of subdivision define these subfaces differently, however they often follow the same goal of smoothing out the overall surface.  This technique allows a very rough sketch of a geometry, to be smoothed out into a more detailed mesh.
 
+## Download Build
+@TODO
+
 ## Mathematics
 
 In this project we implemented two different methods of subdivision which we will examine below.
@@ -173,6 +176,12 @@ If LoopSubdivide is called with a quad mesh, the mesh will first have its quads 
 ![Catmull-Clark octahedron2](images/octahedron2_catmull.png)
 
 
+
+### Donut Catmull-Clark
+
+|![1](images/Donut1.png)|![2](images/Donut2.png)|![3](images/Donut3.png)|![4](images/DonutSmooth.png)|
+|-----------------------|-----------------------|-----------------------|------------------------|
+
 ## Interesting Properties:
 
 
@@ -182,7 +191,9 @@ If LoopSubdivide is called with a quad mesh, the mesh will first have its quads 
 |![ExampleGif](images/catmullWithTriangles.gif)|![ExampleImage](images/catmullWithTriangles.jpg)|
 |----------------------------------------------|------------------------------------------------|
 
-- Similar to above... alternating between using Catmull-Clark, and converting back to triangles and using Loop gives an similary interesting result, however rather than rivers we see what resembles craters and 
+- Similar to above... alternating between using Catmull-Clark, and converting back to triangles and using Loop gives an similary interesting result, however rather than rivers we see resembles mountains and valleys
 
 |![ExampleGif](images/CatmullLoopAlternate.gif)|![ExampleImage](images/CatmullLoopAlternate.jpg)|
 |----------------------------------------------|------------------------------------------------|
+
+These artifacts arise from the converstion from quads to triangles and aren't necessarilly smooth but they interesting detail to the subdivided surfaces
