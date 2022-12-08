@@ -1,6 +1,7 @@
 
 >Project By: Jacob Yenney and Karisma Kumar
->![demonstration gif](images/demo.gif)
+
+![demonstration gif](images/demo.gif)
 
 Subdividing a surface is the process of dividing a surfaces faces into several subfaces.  Different techniques of subdivision define these subfaces differently, however they often follow the same goal of smoothing out the overall surface.  This technique allows a very rough sketch of a geometry, to be smoothed out into a more detailed mesh.
 
