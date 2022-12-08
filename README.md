@@ -165,21 +165,17 @@ If LoopSubdivide is called with a quad mesh, the mesh will first have its quads 
 
 ### Donut Catmull-Clark
 
-|![1](images/Donut1.png)|![2](images/Donut2.png)|![3](images/Donut3.png)|![4](images/DonutSmooth.png)|
-|-----------------------|-----------------------|-----------------------|------------------------|
-
+![1](images/Donut1.png)  ![2](images/Donut2.png)  ![3](images/Donut3.png)  ![4](images/DonutSmooth.png)
 ## Interesting Properties:
 
 
 - Using Catmull-Clark Subdivision, converting the mesh back into triangles between each iteration of subdivision gives generates the same smooth surface as it would otherwise, however it is very jagged locally, creating a very interesting mesh.  The result looks like erosion from rivers
 
 
-|![ExampleGif](images/catmullWithTriangles.gif)|![ExampleImage](images/catmullWithTriangles.jpg)|
-|----------------------------------------------|------------------------------------------------|
+![ExampleGif](images/catmullWithTriangles.gif)  ![ExampleImage](images/catmullWithTriangles.jpg)
 
 - Similar to above... alternating between using Catmull-Clark, and converting back to triangles and using Loop gives an similary interesting result, however rather than rivers we see resembles mountains and valleys
 
-|![ExampleGif](images/CatmullLoopAlternate.gif)|![ExampleImage](images/CatmullLoopAlternate.jpg)|
-|----------------------------------------------|------------------------------------------------|
+![ExampleGif](images/CatmullLoopAlternate.gif)  ![ExampleImage](images/CatmullLoopAlternate.jpg)
 
 These artifacts arise from the converstion from quads to triangles and aren't necessarilly smooth but they interesting detail to the subdivided surfaces
