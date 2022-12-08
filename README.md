@@ -41,7 +41,29 @@ This was the first method we implemented, and is shown off in the demonstration 
 
 ### Catmull-Clark Subdivision
 
+This technique was developed by Edwin Catmull and Jim Clark in 1978.  The algorithm is different from Loop subdivision in that it can be used more genearlly on any polygonal mesh, however the output mesh will be composed entirely of quads.  Reapeated subdivision results in a C2 smooth mesh, (C1 at boundary points).  
 
+#### The Algorithm
+Given the input Geometry G.
+
+1. Create a new "face point", FP for each face of G.  The position of FP will be the average of each original vertex of the face.  
+ 
+![Face Point Diagram]()
+
+2. For each edge of G add a new edge point, EP.  The Position of EP will be equal to the average of the edges 2 neighboring face points, as well as the two end points of the edge EP is being added to.
+
+![Edge Point Diagram]()
+
+3. For each original vertex of G, update its position as an average of its new neighbors.  let P be the position of the original vertex.  let F be the average of the position of the face points of all n neighboring faces.  Let E be the average of the new edge points of the n neighboring edges.  Finally, the updated position of the vertex will be equal to (F + 2E + (n-3)P) / n. 
+
+![Updated Vertex Position Diagram]()
+
+4. Finally connect the new points to create the new faces.
+   1. Connect a new edge from each face point to the edge points of its face.  
+    2. Connect an edge from each original vertex to the new edge points along its original edges.  
+    3. Define the enclosed spaces as new faces.  These faces will always be composed of two edges from step 1 and two edges from step 2, generating a quad face.  
+
+![Catmull-Clark Subface Diagram]()
 
 ## Implemenation Details
 
